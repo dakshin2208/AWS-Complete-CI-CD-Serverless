@@ -1,0 +1,5 @@
+com\student\controller\TaskController.class
+com\student\repository\TaskRepository.class
+com\student\model\Task.class
+com\student\StudyPlannerApplication.class
+com\student\service\TaskService.class

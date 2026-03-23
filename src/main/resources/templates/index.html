@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Study Planner v1.0.1</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #fff5f5; color: #333; }
+
+        .header {
+            background: linear-gradient(135deg, #f5365c 0%, #f56036 100%);
+            color: white; padding: 20px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .header h1 { font-size: 24px; }
+        .header p { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+
+        .stats { display: flex; gap: 12px; }
+        .stat-card {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px; padding: 10px 20px; text-align: center;
+        }
+        .stat-card .num { font-size: 26px; font-weight: bold; }
+        .stat-card .label { font-size: 11px; opacity: 0.85; }
+
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+
+        .add-form {
+            background: white; border-radius: 12px;
+            padding: 24px; margin-bottom: 24px;
+            box-shadow: 0 2px 10px rgba(245,54,92,0.08);
+            border-top: 3px solid #f5365c;
+        }
+        .add-form h2 { margin-bottom: 16px; color: #555; font-size: 16px; }
+        .form-row { display: flex; gap: 12px; flex-wrap: wrap; }
+        .form-row input, .form-row select {
+            flex: 1; min-width: 140px;
+            padding: 10px 14px; border: 1px solid #fca5a5;
+            border-radius: 8px; font-size: 14px; outline: none;
+        }
+        .form-row input:focus, .form-row select:focus { border-color: #f5365c; }
+        .btn-add {
+            background: linear-gradient(135deg, #f5365c 0%, #f56036 100%);
+            color: white;
+            border: none; padding: 10px 24px;
+            border-radius: 8px; cursor: pointer; font-size: 14px;
+        }
+        .btn-add:hover { opacity: 0.9; }
+
+        .tasks-section h2 { margin-bottom: 14px; color: #444; font-size: 16px; }
+
+        .task-card {
+            background: white; border-radius: 10px;
+            padding: 16px 20px; margin-bottom: 10px;
+            display: flex; align-items: center; gap: 16px;
+            box-shadow: 0 1px 6px rgba(245,54,92,0.08);
+            border-left: 3px solid #f5365c;
+            transition: transform 0.15s;
+        }
+        .task-card:hover { transform: translateY(-1px); }
+        .task-card.completed { opacity: 0.55; border-left-color: #ccc; }
+
+        .priority-dot {
+            width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+        }
+        .HIGH { background: #e53e3e; }
+        .MEDIUM { background: #ed8936; }
+        .LOW { background: #48bb78; }
+
+        .task-info { flex: 1; }
+        .task-info .subject { font-weight: 600; font-size: 15px; }
+        .task-info .topic { font-size: 13px; color: #777; margin-top: 2px; }
+        .task-info .due { font-size: 12px; color: #999; margin-top: 4px; }
+
+        .priority-badge {
+            font-size: 11px; font-weight: 600; padding: 3px 10px;
+            border-radius: 20px;
+        }
+        .badge-HIGH { background: #fff5f5; color: #c53030; }
+        .badge-MEDIUM { background: #fffaf0; color: #c05621; }
+        .badge-LOW { background: #f0fff4; color: #276749; }
+
+        .actions { display: flex; gap: 8px; }
+        .btn-done {
+            background: #48bb78; color: white;
+            border: none; padding: 6px 14px;
+            border-radius: 6px; cursor: pointer; font-size: 12px;
+        }
+        .btn-done:hover { background: #38a169; }
+        .btn-del {
+            background: #f5365c; color: white;
+            border: none; padding: 6px 14px;
+            border-radius: 6px; cursor: pointer; font-size: 12px;
+        }
+        .btn-del:hover { background: #e11d48; }
+        .done-tag {
+            background: #c6f6d5; color: #276749;
+            font-size: 11px; padding: 4px 10px; border-radius: 20px;
+        }
+
+        .empty { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div>
+        <h1>📚 Student Study Planner</h1>
+        <p>Stay organized. Study smarter.</p>
+    </div>
+    <div class="stats">
+        <div class="stat-card">
+            <div class="num" th:text="${pendingCount}">0</div>
+            <div class="label">Pending</div>
+        </div>
+        <div class="stat-card">
+            <div class="num" th:text="${completedCount}">0</div>
+            <div class="label">Completed</div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- Add Task Form -->
+    <div class="add-form">
+        <h2>➕ Add New Study Task</h2>
+        <form th:action="@{/add}" th:object="${newTask}" method="post">
+            <div class="form-row">
+                <input type="text" th:field="*{subject}" placeholder="Subject (e.g. Mathematics)" required/>
+                <input type="text" th:field="*{topic}" placeholder="Topic (e.g. Integration)" required/>
+                <input type="date" th:field="*{dueDate}"/>
+                <select th:field="*{priority}">
+                    <option value="HIGH">🔴 High</option>
+                    <option value="MEDIUM">🟠 Medium</option>
+                    <option value="LOW">🟢 Low</option>
+                </select>
+                <button type="submit" class="btn-add">Add Task</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Task List -->
+    <div class="tasks-section">
+        <h2>📋 My Study Tasks</h2>
+
+        <div th:if="${#lists.isEmpty(tasks)}" class="empty">
+            No tasks yet! Add your first study task above 👆
+        </div>
+
+        <div th:each="task : ${tasks}"
+             th:class="${task.completed} ? 'task-card completed' : 'task-card'">
+
+            <div th:class="'priority-dot ' + ${task.priority}"></div>
+
+            <div class="task-info">
+                <div class="subject" th:text="${task.subject}">Subject</div>
+                <div class="topic" th:text="${task.topic}">Topic</div>
+                <div class="due" th:if="${task.dueDate != null and !task.dueDate.isEmpty()}"
+                     th:text="'Due: ' + ${task.dueDate}">Due</div>
+            </div>
+
+            <span th:class="'priority-badge badge-' + ${task.priority}"
+                  th:text="${task.priority}">Priority</span>
+
+            <div class="actions">
+                <span th:if="${task.completed}" class="done-tag">✓ Done</span>
+                <a th:if="${!task.completed}" th:href="@{/complete/{id}(id=${task.id})}">
+                    <button class="btn-done">✓ Done</button>
+                </a>
+                <a th:href="@{/delete/{id}(id=${task.id})}">
+                    <button class="btn-del">Delete</button>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
